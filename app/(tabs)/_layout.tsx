@@ -19,8 +19,36 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: 'Início',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+          title: 'Buscar Serviços',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="search" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Perfil',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="payments"
+        options={{
+          title: 'Pagamentos',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="creditcard" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="reviews"
+        options={{
+          title: 'Avaliações',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="star" color={color} />,
         }}
       />
     </Tabs>

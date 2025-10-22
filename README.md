@@ -1,50 +1,160 @@
-# Welcome to your Expo app 👋
+# ServPlat - Plataforma de Serviços MVP
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Este é um MVP (Minimum Viable Product) de uma plataforma de serviços desenvolvida em React Native com Expo, seguindo as especificações da planilha de entregas.
 
-## Get started
+## 🚀 Funcionalidades Implementadas
 
-1. Install dependencies
+### Entrega 1 - Cadastro de Pessoas ✅
+- **Formulário de cadastro** com validação de campos obrigatórios
+- **Formulário de login** com validação de credenciais
+- **Armazenamento de usuários** em SQLite com dados consistentes
+- **Mecanismo de autenticação** com sessão ativa
+- **Validações implementadas:**
+  - Email: formato válido e único
+  - Senha: mínimo 6 caracteres com letra e número
+  - Telefone: formato brasileiro (XX) XXXXX-XXXX
+  - Nome: obrigatório
+  - Tipo de usuário: cliente ou prestador
 
+### Entrega 1 - Cadastro de Serviços ✅
+- **Formulário de cadastro de serviços** com validação
+- **Armazenamento de serviços** em SQLite
+- **Validações implementadas:**
+  - Título e descrição obrigatórios
+  - Preço maior que 0 e menor que 999999.99
+  - Tipo de preço: fixo, por_hora ou orçamento
+  - Cidade obrigatória
+  - Verificação de prestador existente
+
+### Entrega 2 - Edição e Exclusão de Serviços ✅
+- **Edição de serviços** com validação
+- **Exclusão de serviços** com confirmação
+- **Alterações refletidas** corretamente no banco
+
+### Entrega 2 - Cadastro de Agenda ✅
+- **Formulário de cadastro de agenda** com horários válidos
+- **Definição de horários disponíveis** por dia da semana
+- **Armazenamento da agenda** em SQLite
+- **Validações implementadas:**
+  - Dia da semana: 0 (domingo) a 6 (sábado)
+  - Horários: formato HH:MM válido
+  - Horário de início anterior ao fim
+  - Verificação de conflitos de agendamento
+
+### Entrega 2 - Consulta/Busca de Serviços ✅
+- **Tela de busca de serviços** implementada
+- **Filtros por:**
+  - Nome/descrição do serviço
+  - Categoria
+  - Cidade
+  - Faixa de preço
+  - Tipo de preço
+  - Avaliação mínima
+- **Usuário encontra serviços** pelo nome ou filtros
+
+## 🛠️ Tecnologias Utilizadas
+
+- **React Native** com Expo
+- **TypeScript** para tipagem estática
+- **SQLite** com expo-sqlite para armazenamento local
+- **Expo Router** para navegação
+- **Context API** para gerenciamento de estado de autenticação
+
+## 📱 Estrutura do Projeto
+
+```
+├── app/                    # Rotas do Expo Router
+│   ├── (tabs)/            # Navegação por tabs
+│   │   ├── index.tsx      # Tela inicial
+│   │   ├── search.tsx     # Busca de serviços
+│   │   ├── profile.tsx    # Perfil e gerenciamento
+│   │   ├── payments.tsx   # Pagamentos (placeholder)
+│   │   └── reviews.tsx    # Avaliações (placeholder)
+│   ├── auth.tsx           # Tela de autenticação
+│   └── _layout.tsx        # Layout principal
+├── components/            # Componentes reutilizáveis
+├── contexts/              # Contextos React
+│   └── AuthContext.tsx    # Contexto de autenticação
+├── services/              # Serviços de negócio
+│   ├── database.ts        # Configuração do SQLite
+│   ├── userService.ts     # Serviços de usuário
+│   ├── serviceService.ts  # Serviços de serviços
+│   └── scheduleService.ts # Serviços de agenda
+├── screens/               # Telas da aplicação
+│   ├── AuthScreen.tsx     # Tela de autenticação
+│   ├── LoginScreen.tsx    # Tela de login
+│   └── RegisterScreen.tsx # Tela de cadastro
+└── database/              # Scripts SQL
+    ├── schema.sql         # Schema do banco
+    └── seed.sql           # Dados iniciais
+```
+
+## 🗄️ Banco de Dados
+
+O projeto utiliza SQLite com as seguintes tabelas:
+
+- **users**: Usuários (clientes e prestadores)
+- **service_categories**: Categorias de serviços
+- **services**: Serviços oferecidos
+- **available_schedules**: Horários disponíveis
+- **appointments**: Agendamentos
+- **reviews**: Avaliações (estrutura preparada)
+
+## 🚀 Como Executar
+
+1. **Instalar dependências:**
    ```bash
    npm install
    ```
 
-2. Start the app
-
+2. **Executar o projeto:**
    ```bash
-   npx expo start
+   npm start
    ```
 
-In the output, you'll find options to open the app in a
+3. **Escolher a plataforma:**
+   - Pressione `a` para Android
+   - Pressione `i` para iOS
+   - Pressione `w` para Web
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## 📋 Validações Implementadas
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Usuários
+- Email único e formato válido
+- Senha com mínimo 6 caracteres, incluindo letra e número
+- Telefone no formato brasileiro
+- Nome obrigatório
+- Tipo de usuário válido
 
-## Get a fresh project
+### Serviços
+- Título e descrição obrigatórios
+- Preço válido (0 < preço < 999999.99)
+- Tipo de preço válido
+- Cidade obrigatória
+- Prestador existente
 
-When you're ready, run:
+### Agenda
+- Dia da semana válido (0-6)
+- Horários no formato HH:MM
+- Horário de início anterior ao fim
+- Verificação de conflitos
 
-```bash
-npm run reset-project
-```
+## 🎯 Próximos Passos
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Para completar o MVP, as seguintes funcionalidades podem ser implementadas:
 
-## Learn more
+1. **Sistema de agendamento** completo
+2. **Notificações** de agendamentos
+3. **Sistema de avaliações** e comentários
+4. **Integração com pagamentos**
+5. **Upload de imagens** para serviços
+6. **Geolocalização** para busca por proximidade
+7. **Chat** entre cliente e prestador
 
-To learn more about developing your project with Expo, look at the following resources:
+## 📝 Notas Técnicas
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- O banco de dados é inicializado automaticamente na primeira execução
+- Dados de exemplo são inseridos automaticamente
+- Validações são feitas tanto no frontend quanto no backend
+- A estrutura está preparada para expansão futura
+- Código organizado seguindo boas práticas de desenvolvimento
