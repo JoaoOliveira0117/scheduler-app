@@ -1,13 +1,13 @@
-import React from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import React from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 export default function LoadingScreen() {
   return (
     <ThemedView style={styles.container}>
       <View style={styles.content}>
-        <ActivityIndicator size="large" color="#6366f1" />
+        <ActivityIndicator size="large" color="#245effff" />
         <ThemedText style={styles.text}>Carregando...</ThemedText>
       </View>
     </ThemedView>

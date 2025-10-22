@@ -9,6 +9,12 @@ import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 export default function HomeScreen() {
   const { user, isAuthenticated, isInitialized, logout } = useAuth();
 
+  React.useEffect(() => {
+    if (isInitialized && !isAuthenticated) {
+      router.replace('/auth');
+    }
+  }, [isInitialized, isAuthenticated]);
+
   const handleLogout = () => {
     Alert.alert(
       'Sair',
@@ -25,14 +31,14 @@ export default function HomeScreen() {
   }
 
   if (!isAuthenticated) {
-      router.replace('/auth');
+    return null;
   }
 
   return (
     <ThemedView style={styles.container}>
       <View style={styles.header}>
         <ThemedText type="title" style={styles.title}>
-          ServPlat
+          Agendei
         </ThemedText>
         <ThemedText style={styles.subtitle}>
           Plataforma de Serviços
@@ -85,7 +91,7 @@ const styles = StyleSheet.create({
   header: {
     padding: 20,
     paddingTop: 60,
-    backgroundColor: '#6366f1',
+    backgroundColor: '#245effff',
     alignItems: 'center',
   },
   title: {
@@ -122,7 +128,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   button: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#245effff',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',

@@ -3,15 +3,15 @@ import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/contexts/AuthContext';
 import React, { useState } from 'react';
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 interface LoginScreenProps {
@@ -43,7 +43,7 @@ export default function LoginScreen({ onNavigateToRegister }: LoginScreenProps) 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <ThemedView style={styles.formContainer}>
           <ThemedText type="title" style={styles.title}>
-            ServPlat
+            Agendei!
           </ThemedText>
           <ThemedText style={styles.subtitle}>
             Faça login para continuar
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 8,
-    color: '#6366f1',
+    color: '#245effff',
   },
   subtitle: {
     fontSize: 16,
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9fafb',
   },
   button: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#245effff',
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   linkText: {
-    color: '#6366f1',
+    color: '#245effff',
     fontSize: 14,
     textDecorationLine: 'underline',
   },

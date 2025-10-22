@@ -27,7 +27,9 @@ export interface Appointment {
 }
 
 export class ScheduleService {
-  private db = databaseService.getDatabase();
+  private async getDb() {
+    return await databaseService.getDatabase();
+  }
 
   // Validações
   private validateTime(time: string): boolean {
@@ -46,6 +48,8 @@ export class ScheduleService {
 
   // Métodos para horários disponíveis
   async createAvailableSchedule(scheduleData: Omit<AvailableSchedule, 'id' | 'created_at'>): Promise<AvailableSchedule> {
+    const db = await this.getDb();
+    
     // Validações
     if (!this.validateDayOfWeek(scheduleData.day_of_week)) {
       throw new Error('Dia da semana deve ser entre 0 (domingo) e 6 (sábado)');
@@ -64,7 +68,7 @@ export class ScheduleService {
     }
 
     // Verificar se o serviço existe
-    const service = await this.db.getFirstAsync(
+    const service = await db.getFirstAsync(
       `SELECT id FROM services WHERE id = ?`,
       [scheduleData.service_id]
     );
@@ -74,7 +78,7 @@ export class ScheduleService {
     }
 
     try {
-      const result = await this.db.runAsync(
+      const result = await db.runAsync(
         `INSERT INTO available_schedules (service_id, day_of_week, start_time, end_time, is_available) 
          VALUES (?, ?, ?, ?, ?)`,
         [
@@ -94,7 +98,9 @@ export class ScheduleService {
   }
 
   async getAvailableScheduleById(id: number): Promise<AvailableSchedule | null> {
-    const schedule = await this.db.getFirstAsync<AvailableSchedule>(
+    const db = await this.getDb();
+    
+    const schedule = await db.getFirstAsync<AvailableSchedule>(
       `SELECT * FROM available_schedules WHERE id = ?`,
       [id]
     );
@@ -103,7 +109,9 @@ export class ScheduleService {
   }
 
   async getAvailableSchedulesByService(serviceId: number): Promise<AvailableSchedule[]> {
-    const schedules = await this.db.getAllAsync<AvailableSchedule>(
+    const db = await this.getDb();
+    
+    const schedules = await db.getAllAsync<AvailableSchedule>(
       `SELECT * FROM available_schedules 
        WHERE service_id = ? AND is_available = 1 
        ORDER BY day_of_week, start_time`,
@@ -113,6 +121,7 @@ export class ScheduleService {
   }
 
   async updateAvailableSchedule(id: number, scheduleData: Partial<Omit<AvailableSchedule, 'id' | 'service_id' | 'created_at'>>): Promise<AvailableSchedule> {
+    const db = await this.getDb();
     const updates: string[] = [];
     const values: any[] = [];
 
@@ -152,7 +161,7 @@ export class ScheduleService {
     values.push(id);
 
     try {
-      await this.db.runAsync(
+      await db.runAsync(
         `UPDATE available_schedules SET ${updates.join(', ')} WHERE id = ?`,
         values
       );
@@ -165,11 +174,14 @@ export class ScheduleService {
   }
 
   async deleteAvailableSchedule(id: number): Promise<void> {
-    await this.db.runAsync(`DELETE FROM available_schedules WHERE id = ?`, [id]);
+    const db = await this.getDb();
+    await db.runAsync(`DELETE FROM available_schedules WHERE id = ?`, [id]);
   }
 
   // Métodos para agendamentos
   async createAppointment(appointmentData: Omit<Appointment, 'id' | 'created_at' | 'updated_at'>): Promise<Appointment> {
+    const db = await this.getDb();
+    
     // Validações
     if (!this.validateDate(appointmentData.scheduled_date)) {
       throw new Error('Data inválida (formato YYYY-MM-DD)');
@@ -185,8 +197,8 @@ export class ScheduleService {
 
     // Verificar se cliente e serviço existem
     const [client, service] = await Promise.all([
-      this.db.getFirstAsync(`SELECT id FROM users WHERE id = ?`, [appointmentData.client_id]),
-      this.db.getFirstAsync(`SELECT id FROM services WHERE id = ?`, [appointmentData.service_id])
+      db.getFirstAsync(`SELECT id FROM users WHERE id = ?`, [appointmentData.client_id]),
+      db.getFirstAsync(`SELECT id FROM services WHERE id = ?`, [appointmentData.service_id])
     ]);
 
     if (!client) {
@@ -198,7 +210,7 @@ export class ScheduleService {
     }
 
     // Verificar se já existe agendamento no mesmo horário
-    const existingAppointment = await this.db.getFirstAsync(
+    const existingAppointment = await db.getFirstAsync(
       `SELECT id FROM appointments 
        WHERE service_id = ? AND scheduled_date = ? AND scheduled_time = ? 
        AND status NOT IN ('cancelado', 'concluido')`,
@@ -210,7 +222,7 @@ export class ScheduleService {
     }
 
     try {
-      const result = await this.db.runAsync(
+      const result = await db.runAsync(
         `INSERT INTO appointments (client_id, service_id, scheduled_date, scheduled_time, status, notes) 
          VALUES (?, ?, ?, ?, ?, ?)`,
         [
@@ -231,7 +243,9 @@ export class ScheduleService {
   }
 
   async getAppointmentById(id: number): Promise<Appointment | null> {
-    const appointment = await this.db.getFirstAsync<Appointment>(
+    const db = await this.getDb();
+    
+    const appointment = await db.getFirstAsync<Appointment>(
       `SELECT a.*, u.name as client_name, s.title as service_title, p.name as provider_name
        FROM appointments a
        LEFT JOIN users u ON a.client_id = u.id
@@ -245,7 +259,9 @@ export class ScheduleService {
   }
 
   async getAppointmentsByClient(clientId: number): Promise<Appointment[]> {
-    const appointments = await this.db.getAllAsync<Appointment>(
+    const db = await this.getDb();
+    
+    const appointments = await db.getAllAsync<Appointment>(
       `SELECT a.*, u.name as client_name, s.title as service_title, p.name as provider_name
        FROM appointments a
        LEFT JOIN users u ON a.client_id = u.id
@@ -259,7 +275,9 @@ export class ScheduleService {
   }
 
   async getAppointmentsByService(serviceId: number): Promise<Appointment[]> {
-    const appointments = await this.db.getAllAsync<Appointment>(
+    const db = await this.getDb();
+    
+    const appointments = await db.getAllAsync<Appointment>(
       `SELECT a.*, u.name as client_name, s.title as service_title, p.name as provider_name
        FROM appointments a
        LEFT JOIN users u ON a.client_id = u.id
@@ -273,6 +291,7 @@ export class ScheduleService {
   }
 
   async updateAppointment(id: number, appointmentData: Partial<Omit<Appointment, 'id' | 'client_id' | 'service_id' | 'created_at' | 'updated_at'>>): Promise<Appointment> {
+    const db = await this.getDb();
     const updates: string[] = [];
     const values: any[] = [];
 
@@ -313,7 +332,7 @@ export class ScheduleService {
     values.push(id);
 
     try {
-      await this.db.runAsync(
+      await db.runAsync(
         `UPDATE appointments SET ${updates.join(', ')} WHERE id = ?`,
         values
       );
@@ -326,30 +345,32 @@ export class ScheduleService {
   }
 
   async deleteAppointment(id: number): Promise<void> {
-    await this.db.runAsync(`DELETE FROM appointments WHERE id = ?`, [id]);
+    const db = await this.getDb();
+    await db.runAsync(`DELETE FROM appointments WHERE id = ?`, [id]);
   }
 
   // Método para verificar horários disponíveis em uma data específica
   async getAvailableTimesForDate(serviceId: number, date: string): Promise<string[]> {
+    const db = await this.getDb();
     const dayOfWeek = new Date(date).getDay();
     
-    const schedules = await this.db.getAllAsync<AvailableSchedule>(
+    const schedules = await db.getAllAsync<AvailableSchedule>(
       `SELECT * FROM available_schedules 
        WHERE service_id = ? AND day_of_week = ? AND is_available = 1`,
       [serviceId, dayOfWeek]
     );
 
-    const appointments = await this.db.getAllAsync<Appointment>(
+    const appointments = await db.getAllAsync<Appointment>(
       `SELECT scheduled_time FROM appointments 
        WHERE service_id = ? AND scheduled_date = ? 
        AND status NOT IN ('cancelado', 'concluido')`,
       [serviceId, date]
     );
 
-    const bookedTimes = new Set(appointments.map(apt => apt.scheduled_time));
+    const bookedTimes = new Set(appointments.map((apt: Appointment) => apt.scheduled_time));
     const availableTimes: string[] = [];
 
-    schedules.forEach(schedule => {
+    schedules.forEach((schedule: AvailableSchedule) => {
       const startTime = schedule.start_time;
       const endTime = schedule.end_time;
       

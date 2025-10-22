@@ -1,17 +1,30 @@
+import { ScheduleSelector } from '@/components/schedule-selector';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/contexts/AuthContext';
+import { AvailableSchedule, scheduleService } from '@/services/scheduleService';
 import { Service, serviceService } from '@/services/serviceService';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    FlatList,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+
+const DAYS_OF_WEEK = [
+  'Domingo',
+  'Segunda',
+  'Terça',
+  'Quarta',
+  'Quinta',
+  'Sexta',
+  'Sábado',
+];
 
 export default function ProfileScreen() {
   const { user } = useAuth();
@@ -26,6 +39,7 @@ export default function ProfileScreen() {
     price_type: 'fixo' as 'fixo' | 'por_hora' | 'orcamento',
     city: '',
     category_id: undefined as number | undefined,
+    schedules: [] as AvailableSchedule[],
   });
 
   const loadData = useCallback(async () => {
@@ -34,7 +48,16 @@ export default function ProfileScreen() {
     try {
       setLoading(true);
       const servicesData = await serviceService.getServicesByProvider(user.id!);
-      setServices(servicesData);
+      
+      // Carregar horários para cada serviço
+      const servicesWithSchedules = await Promise.all(
+        servicesData.map(async (service) => {
+          const schedules = await scheduleService.getAvailableSchedulesByService(service.id!);
+          return { ...service, schedules };
+        })
+      );
+      
+      setServices(servicesWithSchedules);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       Alert.alert('Erro', 'Erro ao carregar dados');
@@ -47,7 +70,7 @@ export default function ProfileScreen() {
     loadData();
   }, [loadData]);
 
-  const handleInputChange = (field: string, value: string | number) => {
+  const handleInputChange = (field: string, value: string | number | AvailableSchedule[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -86,14 +109,33 @@ export default function ProfileScreen() {
         category_id: formData.category_id || undefined,
       };
 
+      let savedService: Service;
       if (editingService) {
-        await serviceService.updateService(editingService.id!, serviceData);
-        Alert.alert('Sucesso', 'Serviço atualizado com sucesso!');
+        savedService = await serviceService.updateService(editingService.id!, serviceData);
       } else {
-        await serviceService.createService(serviceData);
-        Alert.alert('Sucesso', 'Serviço criado com sucesso!');
+        savedService = await serviceService.createService(serviceData);
       }
 
+      // Atualizar horários
+      if (formData.schedules.length > 0) {
+        // Excluir horários existentes
+        if (editingService) {
+          const existingSchedules = await scheduleService.getAvailableSchedulesByService(editingService.id!);
+          await Promise.all(existingSchedules.map(schedule => 
+            scheduleService.deleteAvailableSchedule(schedule.id!)
+          ));
+        }
+
+        // Criar novos horários
+        await Promise.all(formData.schedules.map(schedule => 
+          scheduleService.createAvailableSchedule({
+            ...schedule,
+            service_id: savedService.id!,
+          })
+        ));
+      }
+
+      Alert.alert('Sucesso', `Serviço ${editingService ? 'atualizado' : 'criado'} com sucesso!`);
       resetForm();
       loadData();
     } catch (error: any) {
@@ -104,17 +146,24 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleEdit = (service: Service) => {
-    setEditingService(service);
-    setFormData({
-      title: service.title,
-      description: service.description,
-      price: service.price.toString(),
-      price_type: service.price_type,
-      city: service.city,
-      category_id: service.category_id || undefined,
-    });
-    setShowAddForm(true);
+  const handleEdit = async (service: Service) => {
+    try {
+      const schedules = await scheduleService.getAvailableSchedulesByService(service.id!);
+      setEditingService(service);
+      setFormData({
+        title: service.title,
+        description: service.description,
+        price: service.price.toString(),
+        price_type: service.price_type,
+        city: service.city,
+        category_id: service.category_id || undefined,
+        schedules: schedules || [],
+      });
+      setShowAddForm(true);
+    } catch (error) {
+      console.error('Erro ao carregar horários:', error);
+      Alert.alert('Erro', 'Erro ao carregar horários do serviço');
+    }
   };
 
   const handleDelete = (serviceId: number) => {
@@ -149,6 +198,7 @@ export default function ProfileScreen() {
       price_type: 'fixo',
       city: '',
       category_id: undefined,
+      schedules: [],
     });
     setEditingService(null);
     setShowAddForm(false);
@@ -180,6 +230,16 @@ export default function ProfileScreen() {
         item.price_type === 'por_hora' ? 'por hora' : 'orçamento'}
       </Text>
       <Text style={styles.serviceLocation}>📍 {item.city}</Text>
+      {item.schedules && item.schedules.length > 0 && (
+        <View style={styles.serviceSchedules}>
+          <Text style={styles.serviceSchedulesTitle}>Horários Disponíveis:</Text>
+          {item.schedules.map((schedule: AvailableSchedule, index: number) => (
+            <Text key={index} style={styles.serviceScheduleItem}>
+              {DAYS_OF_WEEK[schedule.day_of_week]}: {schedule.start_time} - {schedule.end_time}
+            </Text>
+          ))}
+        </View>
+      )}
       {item.category_name && (
         <Text style={styles.serviceCategory}>Categoria: {item.category_name}</Text>
       )}
@@ -213,13 +273,14 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      {showAddForm && (
-        <View style={styles.formCard}>
-          <ThemedText style={styles.formTitle}>
-            {editingService ? 'Editar Serviço' : 'Novo Serviço'}
-          </ThemedText>
+      <ScrollView style={styles.scrollContainer}>
+        {showAddForm && (
+          <View style={styles.formCard}>
+            <ThemedText style={styles.formTitle}>
+              {editingService ? 'Editar Serviço' : 'Novo Serviço'}
+            </ThemedText>
 
-          <TextInput
+            <TextInput
             style={styles.input}
             placeholder="Título do serviço"
             value={formData.title}
@@ -259,6 +320,12 @@ export default function ProfileScreen() {
             onChangeText={(value) => handleInputChange('city', value)}
           />
 
+          <ScheduleSelector
+            schedules={formData.schedules}
+            onSchedulesChange={(schedules) => handleInputChange('schedules', schedules)}
+            serviceId={editingService?.id || -1}
+          />
+
           <View style={styles.formActions}>
             <TouchableOpacity
               style={styles.cancelButton}
@@ -276,16 +343,18 @@ export default function ProfileScreen() {
               </Text>
             </TouchableOpacity>
           </View>
-        </View>
-      )}
+          </View>
+        )}
 
-      <FlatList
-        data={services}
-        renderItem={renderServiceCard}
-        keyExtractor={(item) => item.id?.toString() || ''}
-        contentContainerStyle={styles.servicesList}
-        showsVerticalScrollIndicator={false}
-      />
+        <FlatList
+          data={services}
+          renderItem={renderServiceCard}
+          keyExtractor={(item) => item.id?.toString() || ''}
+          contentContainerStyle={styles.servicesList}
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={false}
+        />
+      </ScrollView>
     </ThemedView>
   );
 }
@@ -295,8 +364,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f3f4f6',
   },
+  scrollContainer: {
+    flexGrow: 1,
+  },
   header: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#245effff',
     padding: 20,
     paddingTop: 60,
     flexDirection: 'row',
@@ -315,7 +387,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   addButtonText: {
-    color: '#6366f1',
+    color: '#245effff',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -393,7 +465,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     flex: 1,
-    backgroundColor: '#6366f1',
+    backgroundColor: '#245effff',
     borderRadius: 8,
     padding: 12,
     alignItems: 'center',
@@ -434,7 +506,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   editButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#245effff',
     borderRadius: 6,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -474,5 +546,28 @@ const styles = StyleSheet.create({
   serviceCategory: {
     fontSize: 12,
     color: '#9ca3af',
+  },
+  serviceSchedules: {
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+    paddingTop: 8,
+  },
+  serviceSchedulesTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 4,
+  },
+  serviceScheduleItem: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginBottom: 2,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 12,
   },
 });

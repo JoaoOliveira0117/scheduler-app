@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f3f4f6',
   },
   header: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#245effff',
     padding: 20,
     paddingTop: 60,
   },
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     borderColor: '#d1d5db',
   },
   filterButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#245effff',
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
   },
   searchButton: {
     flex: 1,
-    backgroundColor: '#6366f1',
+    backgroundColor: '#245effff',
     borderRadius: 8,
     padding: 12,
     alignItems: 'center',
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
     color: '#6b7280',
   },
   viewDetailsButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#245effff',
     borderRadius: 8,
     padding: 12,
     alignItems: 'center',

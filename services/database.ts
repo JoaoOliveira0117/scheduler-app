@@ -17,6 +17,7 @@ export class DatabaseService {
     try {
       this.db = await SQLite.openDatabaseAsync('servplat.db');
       await this.createTables();
+      await this.runMigrations();
       await this.seedData();
       this.isInitialized = true;
       console.log('Banco de dados inicializado com sucesso');
@@ -24,6 +25,24 @@ export class DatabaseService {
       console.error('Erro ao inicializar banco de dados:', error);
       this.initPromise = null;
       throw error;
+    }
+  }
+
+  private async runMigrations(): Promise<void> {
+    if (!this.db) throw new Error('Banco de dados não inicializado');
+
+    const migrations = [
+      // Adicionar coluna CPF
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS cpf TEXT UNIQUE NOT NULL DEFAULT '00000000000';
+       CREATE INDEX IF NOT EXISTS idx_users_cpf ON users(cpf);`
+    ];
+
+    for (const migration of migrations) {
+      try {
+        await this.db.execAsync(migration);
+      } catch (error) {
+        console.log('Migração já aplicada ou erro:', error);
+      }
     }
   }
 
@@ -37,6 +56,7 @@ export class DatabaseService {
           name TEXT NOT NULL,
           email TEXT UNIQUE NOT NULL,
           password TEXT NOT NULL,
+          cpf TEXT UNIQUE NOT NULL DEFAULT '00000000000',
           phone TEXT,
           city TEXT,
           user_type TEXT NOT NULL CHECK (user_type IN ('cliente', 'prestador')),
@@ -180,7 +200,8 @@ export class DatabaseService {
     await this.db.execAsync(seedData);
   }
 
-  getDatabase(): SQLite.SQLiteDatabase {
+  async getDatabase(): Promise<SQLite.SQLiteDatabase> {
+    await this.initialize();
     if (!this.db || !this.isInitialized) {
       throw new Error('Banco de dados não inicializado. Chame initialize() primeiro.');
     }

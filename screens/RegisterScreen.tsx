@@ -26,6 +26,7 @@ export default function RegisterScreen({ onNavigateToLogin }: RegisterScreenProp
     confirmPassword: '',
     phone: '',
     city: '',
+    cpf: '',
     userType: 'cliente' as 'cliente' | 'prestador',
   });
   const { register, isLoading } = useAuth();
@@ -60,6 +61,11 @@ export default function RegisterScreen({ onNavigateToLogin }: RegisterScreenProp
       return false;
     }
 
+    if (!formData.cpf.trim() || formData.cpf.length !== 11) {
+      Alert.alert('Erro', 'CPF é obrigatório e deve ter 11 dígitos');
+      return false;
+    }
+
     return true;
   };
 
@@ -72,6 +78,7 @@ export default function RegisterScreen({ onNavigateToLogin }: RegisterScreenProp
       password: formData.password,
       phone: formData.phone.trim() || undefined,
       city: formData.city.trim() || undefined,
+      cpf: formData.cpf.trim(),
       user_type: formData.userType,
     });
 
@@ -165,41 +172,28 @@ export default function RegisterScreen({ onNavigateToLogin }: RegisterScreenProp
           </View>
 
           <View style={styles.inputContainer}>
+            <ThemedText style={styles.label}>CPF *</ThemedText>
+            <TextInput
+              style={styles.input}
+              value={formData.cpf}
+              onChangeText={(value) => handleInputChange('cpf', value)}
+              placeholder="Digite seu CPF"
+              keyboardType="numeric"
+              maxLength={11}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
             <ThemedText style={styles.label}>Tipo de Usuário *</ThemedText>
-            <View style={styles.radioContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.radioButton,
-                  formData.userType === 'cliente' && styles.radioButtonSelected,
-                ]}
-                onPress={() => handleInputChange('userType', 'cliente')}
-              >
-                <Text
-                  style={[
-                    styles.radioText,
-                    formData.userType === 'cliente' && styles.radioTextSelected,
-                  ]}
-                >
-                  Cliente
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.radioButton,
-                  formData.userType === 'prestador' && styles.radioButtonSelected,
-                ]}
-                onPress={() => handleInputChange('userType', 'prestador')}
-              >
-                <Text
-                  style={[
-                    styles.radioText,
-                    formData.userType === 'prestador' && styles.radioTextSelected,
-                  ]}
-                >
-                  Prestador
-                </Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={styles.checkboxContainer}
+              onPress={() => handleInputChange('userType', formData.userType === 'prestador' ? 'cliente' : 'prestador')}
+            >
+              <View style={[styles.checkbox, formData.userType === 'prestador' && styles.checkboxSelected]}>
+                {formData.userType === 'prestador' && <Text style={styles.checkmark}>✓</Text>}
+              </View>
+              <ThemedText style={styles.checkboxLabel}>Sou prestador de serviços</ThemedText>
+            </TouchableOpacity>
           </View>
 
           <TouchableOpacity
@@ -253,7 +247,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 8,
-    color: '#6366f1',
+    color: '#245effff',
   },
   subtitle: {
     fontSize: 16,
@@ -292,7 +286,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9fafb',
   },
   radioButtonSelected: {
-    borderColor: '#6366f1',
+    borderColor: '#245effff',
     backgroundColor: '#eef2ff',
   },
   radioText: {
@@ -300,11 +294,38 @@ const styles = StyleSheet.create({
     color: '#6b7280',
   },
   radioTextSelected: {
-    color: '#6366f1',
+    color: '#2196F3',
     fontWeight: '600',
   },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderWidth: 2,
+    borderColor: '#d1d5db',
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxSelected: {
+    backgroundColor: '#2196F3',
+    borderColor: '#2196F3',
+  },
+  checkmark: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  checkboxLabel: {
+    fontSize: 16,
+    color: '#374151',
+  },
   button: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#2196F3',
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',
@@ -322,7 +343,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   linkText: {
-    color: '#6366f1',
+    color: '#245effff',
     fontSize: 14,
     textDecorationLine: 'underline',
   },

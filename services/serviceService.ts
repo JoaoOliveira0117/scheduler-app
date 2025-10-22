@@ -24,6 +24,7 @@ export interface Service {
   // Campos relacionados
   provider_name?: string;
   category_name?: string;
+  schedules?: import('@/services/scheduleService').AvailableSchedule[];
 }
 
 export interface ServiceSearchFilters {
@@ -41,8 +42,8 @@ export class ServiceService {
     await databaseService.initialize();
   }
 
-  private getDb() {
-    return databaseService.getDatabase();
+  private async getDb() {
+    return await databaseService.getDatabase();
   }
 
   // Validações
@@ -79,7 +80,7 @@ export class ServiceService {
     }
 
     // Verificar se o prestador existe
-    const provider = await this.getDb().getFirstAsync(
+    const provider = await (await this.getDb()).getFirstAsync(
       `SELECT id FROM users WHERE id = ? AND user_type = 'prestador'`,
       [serviceData.provider_id]
     );
@@ -90,7 +91,7 @@ export class ServiceService {
 
     // Verificar se a categoria existe (se fornecida)
     if (serviceData.category_id) {
-      const category = await this.getDb().getFirstAsync(
+      const category = await (await this.getDb()).getFirstAsync(
         `SELECT id FROM service_categories WHERE id = ?`,
         [serviceData.category_id]
       );
@@ -101,7 +102,7 @@ export class ServiceService {
     }
 
     try {
-      const result = await this.getDb().runAsync(
+      const result = await (await this.getDb()).runAsync(
         `INSERT INTO services (provider_id, category_id, title, description, price, price_type, city) 
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
@@ -124,8 +125,8 @@ export class ServiceService {
 
   async getServiceById(id: number): Promise<Service | null> {
     await this.ensureDatabaseInitialized();
-    
-    const service = await this.getDb().getFirstAsync<Service>(
+
+    const service = await (await this.getDb()).getFirstAsync<Service>(
       `SELECT s.*, u.name as provider_name, sc.name as category_name
        FROM services s
        LEFT JOIN users u ON s.provider_id = u.id
@@ -184,7 +185,7 @@ export class ServiceService {
 
     if (serviceData.category_id !== undefined) {
       if (serviceData.category_id) {
-        const category = await this.getDb().getFirstAsync(
+        const category = await (await this.getDb()).getFirstAsync(
           `SELECT id FROM service_categories WHERE id = ?`,
           [serviceData.category_id]
         );
@@ -210,7 +211,7 @@ export class ServiceService {
     values.push(id);
 
     try {
-      await this.getDb().runAsync(
+      await (await this.getDb()).runAsync(
         `UPDATE services SET ${updates.join(', ')} WHERE id = ?`,
         values
       );
@@ -224,13 +225,13 @@ export class ServiceService {
 
   async deleteService(id: number): Promise<void> {
     await this.ensureDatabaseInitialized();
-    await this.getDb().runAsync(`DELETE FROM services WHERE id = ?`, [id]);
+    await (await this.getDb()).runAsync(`DELETE FROM services WHERE id = ?`, [id]);
   }
 
   async getAllServices(): Promise<Service[]> {
     await this.ensureDatabaseInitialized();
-    
-    const services = await this.getDb().getAllAsync<Service>(
+
+    const services = await (await this.getDb()).getAllAsync<Service>(
       `SELECT s.*, u.name as provider_name, sc.name as category_name
        FROM services s
        LEFT JOIN users u ON s.provider_id = u.id
@@ -292,14 +293,14 @@ export class ServiceService {
 
     query += ` ORDER BY s.rating DESC, s.created_at DESC`;
 
-    const services = await this.getDb().getAllAsync<Service>(query, values);
+    const services = await (await this.getDb()).getAllAsync<Service>(query, values);
     return services;
   }
 
   async getServicesByProvider(providerId: number): Promise<Service[]> {
     await this.ensureDatabaseInitialized();
-    
-    const services = await this.getDb().getAllAsync<Service>(
+
+    const services = await (await this.getDb()).getAllAsync<Service>(
       `SELECT s.*, u.name as provider_name, sc.name as category_name
        FROM services s
        LEFT JOIN users u ON s.provider_id = u.id
@@ -314,8 +315,8 @@ export class ServiceService {
   // Métodos para categorias
   async getAllCategories(): Promise<ServiceCategory[]> {
     await this.ensureDatabaseInitialized();
-    
-    const categories = await this.getDb().getAllAsync<ServiceCategory>(
+
+    const categories = await (await this.getDb()).getAllAsync<ServiceCategory>(
       `SELECT * FROM service_categories ORDER BY name`
     );
     return categories;
@@ -329,12 +330,12 @@ export class ServiceService {
     }
 
     try {
-      const result = await this.getDb().runAsync(
+      const result = await (await this.getDb()).runAsync(
         `INSERT INTO service_categories (name, description) VALUES (?, ?)`,
         [categoryData.name.trim(), categoryData.description || null]
       );
 
-      const newCategory = await this.getDb().getFirstAsync<ServiceCategory>(
+      const newCategory = await (await this.getDb()).getFirstAsync<ServiceCategory>(
         `SELECT * FROM service_categories WHERE id = ?`,
         [result.lastInsertRowId as number]
       );

@@ -7,6 +7,7 @@ export interface User {
   password: string;
   phone?: string;
   city?: string;
+  cpf: string;
   user_type: 'cliente' | 'prestador';
   created_at?: string;
   updated_at?: string;
@@ -22,8 +23,8 @@ export class UserService {
     await databaseService.initialize();
   }
 
-  private getDb() {
-    return databaseService.getDatabase();
+  private async getDb() {
+    return await databaseService.getDatabase();
   }
 
   // Validações
@@ -69,15 +70,17 @@ export class UserService {
     }
 
     try {
-      const result = await this.getDb().runAsync(
-        `INSERT INTO users (name, email, password, phone, city, user_type) 
-         VALUES (?, ?, ?, ?, ?, ?)`,
+      const db = await this.getDb();
+      const result = await db.runAsync(
+        `INSERT INTO users (name, email, password, phone, city, cpf, user_type) 
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           userData.name.trim(),
           userData.email.toLowerCase().trim(),
           userData.password, // Em produção, usar hash da senha
           userData.phone || null,
           userData.city || null,
+          userData.cpf.trim(),
           userData.user_type
         ]
       );
@@ -99,7 +102,8 @@ export class UserService {
       throw new Error('Email inválido');
     }
 
-    const user = await this.getDb().getFirstAsync<User>(
+    const db = await this.getDb();
+    const user = await db.getFirstAsync<User>(
       `SELECT * FROM users WHERE email = ? AND password = ?`,
       [credentials.email.toLowerCase().trim(), credentials.password]
     );
@@ -110,7 +114,8 @@ export class UserService {
   async getUserById(id: number): Promise<User | null> {
     await this.ensureDatabaseInitialized();
     
-    const user = await this.getDb().getFirstAsync<User>(
+    const db = await this.getDb();
+    const user = await db.getFirstAsync<User>(
       `SELECT * FROM users WHERE id = ?`,
       [id]
     );
@@ -121,7 +126,8 @@ export class UserService {
   async getUserByEmail(email: string): Promise<User | null> {
     await this.ensureDatabaseInitialized();
     
-    const user = await this.getDb().getFirstAsync<User>(
+    const db = await this.getDb();
+    const user = await db.getFirstAsync<User>(
       `SELECT * FROM users WHERE email = ?`,
       [email.toLowerCase().trim()]
     );
@@ -188,7 +194,8 @@ export class UserService {
     values.push(id);
 
     try {
-      await this.getDb().runAsync(
+      const db = await this.getDb();
+      await db.runAsync(
         `UPDATE users SET ${updates.join(', ')} WHERE id = ?`,
         values
       );
@@ -205,18 +212,21 @@ export class UserService {
 
   async deleteUser(id: number): Promise<void> {
     await this.ensureDatabaseInitialized();
-    await this.getDb().runAsync(`DELETE FROM users WHERE id = ?`, [id]);
+    const db = await this.getDb();
+    await db.runAsync(`DELETE FROM users WHERE id = ?`, [id]);
   }
 
   async getAllUsers(): Promise<User[]> {
     await this.ensureDatabaseInitialized();
-    const users = await this.getDb().getAllAsync<User>(`SELECT * FROM users ORDER BY created_at DESC`);
+    const db = await this.getDb();
+    const users = await db.getAllAsync<User>(`SELECT * FROM users ORDER BY created_at DESC`);
     return users;
   }
 
   async getUsersByType(userType: 'cliente' | 'prestador'): Promise<User[]> {
     await this.ensureDatabaseInitialized();
-    const users = await this.getDb().getAllAsync<User>(
+    const db = await this.getDb();
+    const users = await db.getAllAsync<User>(
       `SELECT * FROM users WHERE user_type = ? ORDER BY created_at DESC`,
       [userType]
     );
