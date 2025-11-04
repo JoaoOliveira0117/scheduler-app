@@ -35,6 +35,7 @@ export interface ServiceSearchFilters {
   max_price?: number;
   price_type?: string;
   min_rating?: number;
+  ordering_id?: number;
 }
 
 export class ServiceService {
@@ -291,7 +292,20 @@ export class ServiceService {
       values.push(filters.min_rating);
     }
 
-    query += ` ORDER BY s.rating DESC, s.created_at DESC`;
+    switch (filters.ordering_id) {
+      case 1:
+        query += ` ORDER BY s.rating DESC, s.created_at DESC`;
+        break;
+      case 2:
+        query += ` ORDER BY s.rating_count DESC, s.created_at DESC`;
+        break;
+      case 3:
+        query += ` ORDER BY s.price ASC, s.created_at DESC`;
+        break;
+      case 4:
+        query += ` ORDER BY s.price DESC, s.created_at DESC`;
+        break;
+    }
 
     const services = await (await this.getDb()).getAllAsync<Service>(query, values);
     return services;

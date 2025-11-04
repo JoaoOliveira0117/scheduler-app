@@ -1,5 +1,6 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { ORDERING_OPTIONS, OrderingOption } from '@/constants/orderingOptions';
 import { Service, ServiceCategory, serviceService } from '@/services/serviceService';
 import React, { useEffect, useState } from 'react';
 import {
@@ -15,6 +16,7 @@ import {
 export default function SearchScreen() {
   const [services, setServices] = useState<Service[]>([]);
   const [categories, setCategories] = useState<ServiceCategory[]>([]);
+  const [orderingOptions, setOrderingOptions] = useState<OrderingOption[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -22,8 +24,10 @@ export default function SearchScreen() {
     city: '',
     min_price: undefined as number | undefined,
     max_price: undefined as number | undefined,
+    ordering_id: 1,
   });
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [showOrderingDropdown, setShowOrderingDropdown] = useState(false);
 
   useEffect(() => {
     loadInitialData();
@@ -37,6 +41,7 @@ export default function SearchScreen() {
       ]);
       setServices(servicesData);
       setCategories(categoriesData);
+      setOrderingOptions(ORDERING_OPTIONS);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       Alert.alert('Erro', 'Erro ao carregar dados');
@@ -51,6 +56,7 @@ export default function SearchScreen() {
       };
       const results = await serviceService.searchServices(searchFilters);
       setServices(results);
+      setShowFilters(false);
     } catch (error) {
       console.error('Erro ao buscar serviços:', error);
       Alert.alert('Erro', 'Erro ao buscar serviços');
@@ -64,6 +70,7 @@ export default function SearchScreen() {
       city: '',
       min_price: undefined,
       max_price: undefined,
+      ordering_id: 1,
     });
     loadInitialData();
   };
@@ -150,29 +157,29 @@ export default function SearchScreen() {
               </TouchableOpacity>
               
               {showCategoryDropdown && (
-                <View style={styles.categoryList}>
+                <View style={styles.dropdownList}>
                   <TouchableOpacity
-                    style={styles.categoryItem}
+                    style={styles.dropdownItem}
                     onPress={() => {
                       setFilters(prev => ({ ...prev, category_id: undefined }));
                       setShowCategoryDropdown(false);
                     }}
                   >
-                    <Text style={styles.categoryItemText}>Todas as Categorias</Text>
+                    <Text style={styles.dropdownItemText}>Todas as Categorias</Text>
                   </TouchableOpacity>
                   {categories.map((c) => (
                     <TouchableOpacity
                       key={c.id}
                       style={[
-                        styles.categoryItem,
-                        filters.category_id === c.id && styles.categorySelected,
+                        styles.dropdownItem,
+                        filters.category_id === c.id && styles.dropdownSelected,
                       ]}
                       onPress={() => {
                         setFilters(prev => ({ ...prev, category_id: c.id }));
                         setShowCategoryDropdown(false);
                       }}
                     >
-                      <Text style={styles.categoryItemText}>{c.name}</Text>
+                      <Text style={styles.dropdownItemText}>{c.name}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -213,6 +220,39 @@ export default function SearchScreen() {
                   keyboardType="numeric"
                 />
               </View>
+            </View>
+
+            <View style={styles.filterRow}>
+              <Text style={styles.filterLabel}>Ordenação</Text>
+              <TouchableOpacity
+                style={styles.dropdown}
+                onPress={() => setShowOrderingDropdown(prev => !prev)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.dropdownText}>
+                  {orderingOptions.find(o => o.id === filters.ordering_id)?.name}
+                </Text>
+              </TouchableOpacity>
+              
+              {showOrderingDropdown && (
+                <View style={styles.dropdownList}>
+                  {orderingOptions.map((op) => (
+                    <TouchableOpacity
+                      key={op.id}
+                      style={[
+                        styles.dropdownItem,
+                        filters.ordering_id === op.id && styles.dropdownSelected,
+                      ]}
+                      onPress={() => {
+                        setFilters(prev => ({ ...prev, ordering_id: op.id }));
+                        setShowOrderingDropdown(false);
+                      }}
+                    >
+                      <Text style={styles.dropdownItemText}>{op.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
 
             <View style={styles.filterActions}>
@@ -331,7 +371,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#374151',
   },
-  categoryList: {
+  dropdownList: {
     backgroundColor: 'white',
     borderRadius: 8,
     borderWidth: 1,
@@ -339,15 +379,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
     paddingVertical: 4,
   },
-  categoryItem: {
+  dropdownItem: {
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
-  categoryItemText: {
+  dropdownItemText: {
     fontSize: 16,
     color: '#374151',
   },
-  categorySelected: {
+  dropdownSelected: {
     backgroundColor: '#eef2ff',
   },
   cityInput: {
