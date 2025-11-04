@@ -23,6 +23,7 @@ export default function SearchScreen() {
     min_price: undefined as number | undefined,
     max_price: undefined as number | undefined,
   });
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   useEffect(() => {
     loadInitialData();
@@ -136,13 +137,46 @@ export default function SearchScreen() {
             
             <View style={styles.filterRow}>
               <Text style={styles.filterLabel}>Categoria</Text>
-              <View style={styles.dropdown}>
+              <TouchableOpacity
+                style={styles.dropdown}
+                onPress={() => setShowCategoryDropdown(prev => !prev)}
+                activeOpacity={0.8}
+              >
                 <Text style={styles.dropdownText}>
                   {filters.category_id 
                     ? categories.find(c => c.id === filters.category_id)?.name 
                     : 'Todas as Categorias'}
                 </Text>
-              </View>
+              </TouchableOpacity>
+              
+              {showCategoryDropdown && (
+                <View style={styles.categoryList}>
+                  <TouchableOpacity
+                    style={styles.categoryItem}
+                    onPress={() => {
+                      setFilters(prev => ({ ...prev, category_id: undefined }));
+                      setShowCategoryDropdown(false);
+                    }}
+                  >
+                    <Text style={styles.categoryItemText}>Todas as Categorias</Text>
+                  </TouchableOpacity>
+                  {categories.map((c) => (
+                    <TouchableOpacity
+                      key={c.id}
+                      style={[
+                        styles.categoryItem,
+                        filters.category_id === c.id && styles.categorySelected,
+                      ]}
+                      onPress={() => {
+                        setFilters(prev => ({ ...prev, category_id: c.id }));
+                        setShowCategoryDropdown(false);
+                      }}
+                    >
+                      <Text style={styles.categoryItemText}>{c.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
 
             <View style={styles.filterRow}>
@@ -296,6 +330,25 @@ const styles = StyleSheet.create({
   dropdownText: {
     fontSize: 16,
     color: '#374151',
+  },
+  categoryList: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    marginTop: 4,
+    paddingVertical: 4,
+  },
+  categoryItem: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  categoryItemText: {
+    fontSize: 16,
+    color: '#374151',
+  },
+  categorySelected: {
+    backgroundColor: '#eef2ff',
   },
   cityInput: {
     backgroundColor: '#f9fafb',
