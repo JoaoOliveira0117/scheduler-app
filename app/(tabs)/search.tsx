@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 
 export default function SearchScreen() {
   const [services, setServices] = useState<Service[]>([]);
@@ -104,12 +105,17 @@ export default function SearchScreen() {
         </Text>
       </View>
       
-      <TouchableOpacity style={styles.viewDetailsButton}>
+      <TouchableOpacity
+      style={styles.viewDetailsButton}
+      onPress={() => router.push(`/service/${item.id}`)}
+      >
+
+
         <Text style={styles.viewDetailsText}>Ver Detalhes</Text>
       </TouchableOpacity>
     </View>
   );
-
+    const router = useRouter();
   return (
     <ThemedView style={styles.container}>
       <View style={styles.header}>

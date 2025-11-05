@@ -1,4 +1,5 @@
 import { databaseService } from './database';
+import { scheduleService } from './scheduleService';
 
 export interface ServiceCategory {
   id?: number;
@@ -16,6 +17,7 @@ export interface Service {
   price: number;
   price_type: 'fixo' | 'por_hora' | 'orcamento';
   city: string;
+  duration: number;
   rating?: number;
   rating_count?: number;
   is_active?: boolean;
@@ -104,8 +106,8 @@ export class ServiceService {
 
     try {
       const result = await (await this.getDb()).runAsync(
-        `INSERT INTO services (provider_id, category_id, title, description, price, price_type, city) 
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO services (provider_id, category_id, title, description, price, price_type, city, duration)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           serviceData.provider_id,
           serviceData.category_id || null,
@@ -113,7 +115,8 @@ export class ServiceService {
           serviceData.description.trim(),
           serviceData.price,
           serviceData.price_type,
-          serviceData.city.trim()
+          serviceData.city.trim(),
+          serviceData.duration
         ]
       );
 
@@ -125,18 +128,18 @@ export class ServiceService {
   }
 
   async getServiceById(id: number): Promise<Service | null> {
-    await this.ensureDatabaseInitialized();
+  const db = await this.getDb();
+  const service = await db.getFirstAsync<Service>(
+    `SELECT * FROM services WHERE id = ?`,
+    [id]
+  );
 
-    const service = await (await this.getDb()).getFirstAsync<Service>(
-      `SELECT s.*, u.name as provider_name, sc.name as category_name
-       FROM services s
-       LEFT JOIN users u ON s.provider_id = u.id
-       LEFT JOIN service_categories sc ON s.category_id = sc.id
-       WHERE s.id = ?`,
-      [id]
-    );
+  if (!service) return null;
 
-    return service || null;
+  // busca os horários do serviço
+  const schedules = await scheduleService.getAvailableSchedulesByService(id);
+  return { ...service, schedules };
+
   }
 
   async updateService(id: number, serviceData: Partial<Omit<Service, 'id' | 'provider_id' | 'rating' | 'rating_count' | 'created_at' | 'updated_at'>>): Promise<Service> {
@@ -365,3 +368,40 @@ export class ServiceService {
 }
 
 export const serviceService = new ServiceService();
+
+function pad(n: number) {
+  return n.toString().padStart(2, '0');
+}
+
+function minutesFromHHMM(t: string) {
+  const [hh, mm] = t.split(':').map(Number);
+  return hh * 60 + mm;
+}
+
+function hhmmFromMinutes(total: number) {
+  const hh = Math.floor(total / 60);
+  const mm = total % 60;
+  return `${pad(hh)}:${pad(mm)}`;
+}
+
+export function generateAvailableTimes(start: string, end: string, durationMinutes?: number): string[] {
+  const times: string[] = [];
+
+  // validação / fallback
+  const step = Number(durationMinutes) && Number(durationMinutes) > 0 ? Math.floor(Number(durationMinutes)) : 30;
+
+  const startM = minutesFromHHMM(start);
+  const endM = minutesFromHHMM(end);
+
+  // se intervalo não válido, retorna vazio
+  if (isNaN(startM) || isNaN(endM) || startM >= endM) return times;
+
+  // gerar slots: só adiciona slot se couber inteiramente dentro do intervalo
+  for (let cur = startM; cur + step <= endM; cur += step) {
+    times.push(hhmmFromMinutes(cur));
+    // segurança extra: evita loop infinito por qualquer razão (limite máximo razoável)
+    if (times.length > 1000) break;
+  }
+
+  return times;
+}

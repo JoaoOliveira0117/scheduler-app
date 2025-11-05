@@ -33,17 +33,24 @@ export class DatabaseService {
 
     const migrations = [
       // Adicionar coluna CPF
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS cpf TEXT UNIQUE NOT NULL DEFAULT '00000000000';
-       CREATE INDEX IF NOT EXISTS idx_users_cpf ON users(cpf);`
+      `ALTER TABLE users ADD COLUMN cpf TEXT UNIQUE NOT NULL DEFAULT '00000000000';
+       CREATE INDEX IF NOT EXISTS idx_users_cpf ON users(cpf);
+       ALTER TABLE services ADD COLUMN duration INTEGER DEFAULT 60;`
     ];
 
-    for (const migration of migrations) {
-      try {
-        await this.db.execAsync(migration);
-      } catch (error) {
-        console.log('Migração já aplicada ou erro:', error);
+      for (const sql of migrations) {
+        try {
+          await this.db.execAsync(sql);
+          console.log('Migração executada com sucesso:', sql);
+        } catch (error: any) {
+          const msg = error.message || '';
+          if (msg.includes('duplicate column name') || msg.includes('already exists')) {
+            console.log('Coluna ou índice já existe, ignorando:', sql);
+          } else {
+            console.error('Erro ao aplicar migração:', sql, error);
+          }
+        }
       }
-    }
   }
 
   private async createTables(): Promise<void> {

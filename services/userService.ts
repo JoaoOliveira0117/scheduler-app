@@ -88,11 +88,18 @@ export class UserService {
       const newUser = await this.getUserById(result.lastInsertRowId as number);
       return newUser!;
     } catch (error: any) {
-      if (error.message.includes('UNIQUE constraint failed')) {
-        throw new Error('Email já está em uso');
+        console.error('Erro SQL ao criar usuário:', error); // 👈 log completo no console
+
+        if (error.message.includes('UNIQUE constraint failed: users.email')) {
+          throw new Error('Email já está em uso');
+        }
+
+        if (error.message.includes('no such column')) {
+          throw new Error('Banco de dados desatualizado. É necessário rodar as migrations novamente.');
+        }
+
+        throw new Error('Erro ao criar usuário: ' + error.message);
       }
-      throw new Error('Erro ao criar usuário: ' + error.message);
-    }
   }
 
   async login(credentials: LoginCredentials): Promise<User | null> {

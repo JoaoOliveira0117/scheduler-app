@@ -38,6 +38,7 @@ export default function ProfileScreen() {
     price: '',
     price_type: 'fixo' as 'fixo' | 'por_hora' | 'orcamento',
     city: '',
+    durationMinutes: '',
     category_id: undefined as number | undefined,
     schedules: [] as AvailableSchedule[],
   });
@@ -107,6 +108,7 @@ export default function ProfileScreen() {
         price_type: formData.price_type,
         city: formData.city.trim(),
         category_id: formData.category_id || undefined,
+        durationMinutes: parseInt(formData.durationMinutes) || 0,
       };
 
       let savedService: Service;
@@ -158,6 +160,7 @@ export default function ProfileScreen() {
         city: service.city,
         category_id: service.category_id || undefined,
         schedules: schedules || [],
+        durationMinutes: service.durationMinutes?.toString() || '',
       });
       setShowAddForm(true);
     } catch (error) {
@@ -318,6 +321,13 @@ export default function ProfileScreen() {
             placeholder="Cidade"
             value={formData.city}
             onChangeText={(value) => handleInputChange('city', value)}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Duração do serviço (em minutos)"
+            value={formData.durationMinutes}
+            onChangeText={(value) => handleInputChange('durationMinutes', value)}
+            keyboardType="numeric"
           />
 
           <ScheduleSelector
