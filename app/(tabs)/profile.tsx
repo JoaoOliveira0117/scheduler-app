@@ -108,7 +108,7 @@ export default function ProfileScreen() {
         price_type: formData.price_type,
         city: formData.city.trim(),
         category_id: formData.category_id || undefined,
-        durationMinutes: parseInt(formData.durationMinutes) || 0,
+        duration: parseInt(formData.durationMinutes) || 0,
       };
 
       let savedService: Service;

@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS services (
     price DECIMAL(10,2) NOT NULL,
     price_type TEXT NOT NULL CHECK (price_type IN ('fixo', 'por_hora', 'orcamento')),
     city TEXT NOT NULL,
+    duration INTEGER default 60,
     rating DECIMAL(3,2) DEFAULT 0.0,
     rating_count INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT 1,
