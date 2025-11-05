@@ -5,6 +5,7 @@ import { serviceService } from '@/services/serviceService';
 import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet, ScrollView } from 'react-native';
 import { scheduleUtils } from '@/services/serviceService';
+import { generateAvailableTimes } from '@/services/serviceService';
 
 export default function ServiceDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -57,10 +58,10 @@ export default function ServiceDetailsScreen() {
 
           {service.schedules && service.schedules.length > 0 ? (
             service.schedules.map((schedule: any, index: number) => {
-              const availableTimes = scheduleUtils.generateAvailableTimes(
+              const availableTimes = generateAvailableTimes(
                 schedule.start_time,
                 schedule.end_time,
-                service.duration // ← divide conforme a duração
+                service.duration
               );
 
               return (
