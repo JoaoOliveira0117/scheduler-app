@@ -34,7 +34,9 @@ export class DatabaseService {
     const migrations = [
       // Adicionar coluna CPF
       `ALTER TABLE users ADD COLUMN cpf TEXT NOT NULL DEFAULT '00000000000';
-       CREATE INDEX IF NOT EXISTS idx_users_cpf ON users(cpf);`
+       CREATE INDEX IF NOT EXISTS idx_users_cpf ON users(cpf);`,
+      // Adicionar coluna duration na tabela services (tempo padrão em minutos)
+      `ALTER TABLE services ADD COLUMN duration INTEGER DEFAULT 60;`
     ];
 
     for (const migration of migrations) {

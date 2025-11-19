@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, ScrollView, StyleSheet } from "react-native";
-import { scheduleService } from "@/services/scheduleService";
 import { useAuth } from "@/contexts/AuthContext";
+import { scheduleService } from "@/services/scheduleService";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function AppointmentsScreen() {
   const { user } = useAuth();
@@ -10,17 +10,24 @@ export default function AppointmentsScreen() {
 
   useEffect(() => {
     loadAppointments();
-  }, []);
+  }, [user]);
 
   const loadAppointments = async () => {
     setLoading(true);
 
-    let result = [];
+    if (!user) {
+      // usuário não logado — nada a carregar
+      setAppointments([]);
+      setLoading(false);
+      return;
+    }
+
+    let result: any[] = [];
 
     if (user.user_type === "cliente") {
-      result = await scheduleService.getAppointmentsByClient(user.id);
+      result = await scheduleService.getAppointmentsByClient(user.id!);
     } else {
-      result = await scheduleService.getAppointmentsByProvider(user.id);
+      result = await scheduleService.getAppointmentsByProvider(user.id!);
     }
 
     setAppointments(result);
@@ -48,7 +55,7 @@ export default function AppointmentsScreen() {
           <Text style={styles.service}>{a.service_title}</Text>
           <Text style={styles.date}>{a.scheduled_date} às {a.scheduled_time}</Text>
           <Text style={styles.user}>
-            {user.user_type === "cliente" ? `Prestador: ${a.provider_name}` : `Cliente: ${a.client_name}`}
+            {user?.user_type === "cliente" ? `Prestador: ${a.provider_name}` : `Cliente: ${a.client_name}`}
           </Text>
           <Text style={styles.status}>Status: {a.status}</Text>
         </View>
